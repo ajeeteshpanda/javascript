@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supermarket Inventory</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f4f4f4;
+      }
+      .low-stock {
+        color: red;
+        font-weight: bold;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Supermarket Inventory Management</h2>
+
+    <h3>Add New Product</h3>
+    <input type="text" id="productName" placeholder="Product Name" />
+    <input type="number" id="productQty" placeholder="Quantity" />
+    <input type="number" id="productPrice" placeholder="Price" />
+    <button onclick="addProduct()">Add Product</button>
+
+    <h3>Inventory</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTable"></tbody>
+    </table>
+
+    <h3>Sales Log</h3>
+    <input type="text" id="saleProduct" placeholder="Product Name" />
+    <input type="number" id="saleQty" placeholder="Quantity" />
+    <button onclick="sellProduct()">Sell</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Sold</th>
+        </tr>
+      </thead>
+      <tbody id="salesTable"></tbody>
+    </table>
+
+    <script>
+      let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+      let salesLog = JSON.parse(localStorage.getItem("salesLog")) || [];
+
+      function saveData() {
+        localStorage.setItem("inventory", JSON.stringify(inventory));
+        localStorage.setItem("salesLog", JSON.stringify(salesLog));
+      }
+
+      function renderInventory() {
+        let table = document.getElementById("inventoryTable");
+        table.innerHTML = "";
+        inventory.forEach((item, index) => {
+          let row = `<tr>
+                    <td>${item.name}</td>
+                    <td class="${item.qty < 5 ? "low-stock" : ""}">${
+            item.qty
+          }</td>
+                    <td>${item.price}</td>
+                    <td>
+                        <button onclick="removeProduct(${index})">Delete</button>
+                    </td>
+                </tr>`;
+          table.innerHTML += row;
+        });
+      }
+
+      function renderSales() {
+        let table = document.getElementById("salesTable");
+        table.innerHTML = "";
+        salesLog.forEach((sale) => {
+          table.innerHTML += `<tr><td>${sale.name}</td><td>${sale.qty}</td></tr>`;
+        });
+      }
+
+      function addProduct() {
+        let name = document.getElementById("productName").value.trim();
+        let qty = parseInt(document.getElementById("productQty").value);
+        let price = parseFloat(document.getElementById("productPrice").value);
+
+        if (!name || qty <= 0 || price <= 0)
+          return alert("Enter valid details!");
+
+        inventory.push({ name, qty, price });
+        saveData();
+        renderInventory();
+      }
+
+      function removeProduct(index) {
+        inventory.splice(index, 1);
+        saveData();
+        renderInventory();
+      }
+
+      function sellProduct() {
+        let name = document.getElementById("saleProduct").value.trim();
+        let qty = parseInt(document.getElementById("saleQty").value);
+        let product = inventory.find(
+          (p) => p.name.toLowerCase() === name.toLowerCase()
+        );
+
+        if (!product || qty <= 0 || product.qty < qty)
+          return alert("Invalid sale!");
+
+        product.qty -= qty;
+        salesLog.push({ name, qty });
+        saveData();
+        renderInventory();
+        renderSales();
+      }
+
+      renderInventory();
+      renderSales();
+    </script>
+  </body>
+</html>
